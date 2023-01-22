@@ -24,21 +24,16 @@ cov = [[0.1,0], [0,0.1]]
 
 #now i guess we should create the data samples
 #use the covariance matrix to generate data
+class1data = np.random.multivariate_normal(mean1, cov, size=100)
+class2data = np.random.multivariate_normal(mean2, cov, size=100)
+class3data = np.random.multivariate_normal(mean3, cov, size=100)
+class4data = np.random.multivariate_normal(mean4, cov, size=100)
 
-#can just use a forloop of sorts to sort this
-#but we would need to make a dic for this
-d = {}
-for val in means:
-    for k in classes:
-        d["class{0}data".format(k)] = np.random.multivariate_normal(val, cov, size=100)
+dfclass1 = pd.DataFrame(class1data,columns=['class1vectorx','class1vectory'])
+dfclass2 = pd.DataFrame(class2data,columns=['class2vectorx','class2vectory'])
+dfclass3 = pd.DataFrame(class3data,columns=['class3vectorx','class3vectory'])
+dfclass4 = pd.DataFrame(class4data,columns=['class4vectorx','class4vectory'])
 
-
-dfclass1 = pd.DataFrame(d['class1data'],columns=['class1columnx','class1columny'])
-dfclass2 = pd.DataFrame(d['class2data'],columns=['class2columnx','class2columny'])
-dfclass3 = pd.DataFrame(d['class3data'],columns=['class3columnx','class3columny'])
-dfclass4 = pd.DataFrame(d['class4data'],columns=['class4columnx','class4columny'])
-
-#conjoin the dataframes for ease of use in jmp
 df_final = pd.concat([dfclass1,dfclass2],axis=1)
 df_final = pd.concat([df_final,dfclass3],axis=1)
 df_final = pd.concat([df_final,dfclass4],axis=1)
@@ -50,20 +45,21 @@ df_final.to_csv("data_part1.csv",header=True,index=False) #save to csv
 #define the diagonal covariance matrix that we will use later
 cov_2 = [[1.0,0], [0,1.0]]
 
-d = {}
-for val in means:
-    for k in classes:
-        d["class{0}data".format(k)] = np.random.multivariate_normal(val, cov_2, size=100)
+class1data = np.random.multivariate_normal(mean1, cov_2, size=100)
+class2data = np.random.multivariate_normal(mean2, cov_2, size=100)
+class3data = np.random.multivariate_normal(mean3, cov_2, size=100)
+class4data = np.random.multivariate_normal(mean4, cov_2, size=100)
 
-dfclass1 = pd.DataFrame(d['class1data'],columns=['class1columnx','class1columny'])
-dfclass2 = pd.DataFrame(d['class2data'],columns=['class2columnx','class2columny'])
-dfclass3 = pd.DataFrame(d['class3data'],columns=['class3columnx','class3columny'])
-dfclass4 = pd.DataFrame(d['class4data'],columns=['class4columnx','class4columny'])
+dfclass1 = pd.DataFrame(class1data,columns=['class1vectorx','class1vectory'])
+dfclass2 = pd.DataFrame(class2data,columns=['class2vectorx','class2vectory'])
+dfclass3 = pd.DataFrame(class3data,columns=['class3vectorx','class3vectory'])
+dfclass4 = pd.DataFrame(class4data,columns=['class4vectorx','class4vectory'])
 
-#conjoin the dataframes for ease of use in jmp
 df_final = pd.concat([dfclass1,dfclass2],axis=1)
 df_final = pd.concat([df_final,dfclass3],axis=1)
 df_final = pd.concat([df_final,dfclass4],axis=1)
+
+df_final.to_csv("data_part2.csv",header=True,index=False) #save to csv
 
 
 df_final.to_csv("data_part2.csv",header=True,index=False) #save to csv
