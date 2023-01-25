@@ -1,0 +1,14 @@
+name: imld.py
+synopsis: imld [options]
+descr: main program for ISIP Machine Learning Demo (IMLD) python-based applet
+
+options:
+ -h, --help: display this file
+
+arguments:
+ none
+
+example:
+ python imld.py --help
+
+  displays this help message

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# file: imld/bin/imld
+#
+# This is a simple driver script for the annotator.
+#
+
+# set an appropriate environment variable for the root node
+# 
+
+# execute the tool
+#
+python ./src/imld.py;
+
+#
+# end of file
