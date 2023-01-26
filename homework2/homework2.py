@@ -51,6 +51,7 @@ print(classification_report(y_test,pred,digits=4))
 
 #so we get an accuracy of 0.792
 
+
 #%%ok so we should do a custom one
 #we primarily focused on simple linear ones in class, so lets do that one to start
 #we can visualize the data as well to get an idea
@@ -114,20 +115,30 @@ for val in np.nditer(prior_dog):
     p_cat.append(1-val)
     
 
-#so we will want to calculate the posterior
-def compute_posterior(prior,sensitivity,specificity):
-    likelihood = sensitivity
-    marginal_likelihood = sensitivity*prior+(1-specificity)*(1-prior)
-    posterior = (likelihood*prior)/marginal_likelihood
-    return(posterior)
+#when we calculate priors we need to assess
+#not entirely sure what the model he wants us to use but im assuming he wants qda?
 
-posterior_values = compute_posterior(prior_dog,sensitivity=0.99,specificity=0.99)
-plt.plot(prior_dog,posterior_values)
-    
-    
-    
-    
-    
+#lets just start by repeating our previous code?
+df_train = df_train
+df_eval = df_eval
+x_train = X_train
+y_train = y_train
+x_test = X_test
+y_test = y_test
 
+#we need to forloop through the qda analysis and do it for every
+#value of the priors but idk why this isnt working
+error_values = []
+
+for val in prior_dog:
+    qda_loop = QuadraticDiscriminantAnalysis(priors=(val))
+    print(val)
+    model_loop = qda_loop.fit(x_train,y_train)
+    pred_loop = model_loop.predict(x_test)
+    error_loop = metrics.accuracy_score(y_test,pred_loop)
+    error_values.append(error_loop)
+
+    
+         
 
 
