@@ -36,7 +36,7 @@ X_test = df_eval[:][['xvec','yvec']]
 y_test = df_eval[:]['animal']
 
 
-qda = QuadraticDiscriminantAnalysis()
+qda = QuadraticDiscriminantAnalysis(priors=[0.5,0.5])
 model = qda.fit(X_train,y_train)
 print(model.priors_)
 print(model.means_)
@@ -105,6 +105,23 @@ print("NB Score: ",nb.score(x_test,y_test))
 
 #%%compute and plot error rate
 
+
+#import eval and train data points
+df_train = pd.read_csv('train.csv',
+                       header=4,
+                       names=["animal","xvec","yvec"])
+
+df_eval = pd.read_csv('eval.csv',
+                      header=4,
+                      names=["animal","xvec","yvec"])
+
+X_train = df_train[:][['xvec','yvec']]
+y_train = df_train[:]['animal']
+
+X_test = df_eval[:][['xvec','yvec']]
+y_test = df_eval[:]['animal']
+
+
 #make a list of samples of prior in range [0,1] in steps of 0.01
 #cat is 1-P("dog")
 prior_dog = np.arange(0.0,1.01,0.01)
@@ -114,6 +131,9 @@ p_cat = []
 for val in np.nditer(prior_dog):
     p_cat.append(1-val)
     
+p_cat = np.array(p_cat)
+
+priorval = np.array((prior_dog,p_cat)).T
 
 #when we calculate priors we need to assess
 #not entirely sure what the model he wants us to use but im assuming he wants qda?
@@ -122,23 +142,29 @@ for val in np.nditer(prior_dog):
 df_train = df_train
 df_eval = df_eval
 x_train = X_train
+print(len(x_train))
 y_train = y_train
+print(len(y_train))
 x_test = X_test
 y_test = y_test
 
 #we need to forloop through the qda analysis and do it for every
-#value of the priors but idk why this isnt working
+# #value of the priors but idk why this isnt working
 error_values = []
 
-for val in prior_dog:
-    qda_loop = QuadraticDiscriminantAnalysis(priors=(val))
-    print(val)
-    model_loop = qda_loop.fit(x_train,y_train)
-    pred_loop = model_loop.predict(x_test)
-    error_loop = metrics.accuracy_score(y_test,pred_loop)
-    error_values.append(error_loop)
+for val,cval in priorval:
+        qda_loop = QuadraticDiscriminantAnalysis(priors=[val,cval])
+        print(val,cval)
+        model_loop = qda_loop.fit(x_train,y_train)
+        pred_loop = model_loop.predict(x_test)
+        error_loop = metrics.accuracy_score(y_test,pred_loop)
+        error_values.append(error_loop)
 
-    
+plt.title("error")
+plt.xlabel("prior_values")
+plt.ylabel("accuracy")
+plt.scatter(prior_dog,error_values,color='blue',alpha=0.3)
+
          
 
 
