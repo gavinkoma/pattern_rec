@@ -10,7 +10,7 @@ Created on Wed Jan 25 16:50:41 2023
 import pandas as pd
 import numpy as np
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.metrics import confusion_matrix, classification_report, precision_score
+from sklearn.metrics import confusion_matrix, classification_report
 from sklearn import metrics
 import matplotlib.pyplot as plt
 
@@ -41,13 +41,13 @@ model = qda.fit(X_train,y_train)
 print(model.priors_)
 print(model.means_)
 pred_train = model.predict(X_train)
-print(metrics.accuracy_score(y_train,pred_train))
+print("the score for training data:\n", metrics.accuracy_score(y_train,pred_train))
 
 #so now we should look at the prediction
 pred = model.predict(X_test)
 print(np.unique(pred,return_counts=True))
 print(confusion_matrix(pred, y_test))
-print(classification_report(y_test,pred,digits=4))
+print("the score for test data:",classification_report(y_test,pred,digits=4))
 
 #so we get an accuracy of 0.792
 
@@ -60,52 +60,53 @@ print(classification_report(y_test,pred,digits=4))
 df_train = pd.read_csv('train.csv',
                        header=4,
                        names=["animal","xvec","yvec"])
+df_eval = pd.read_csv('eval.csv',
+                      header=4,
+                      names=["animal","xvec","yvec"])
 
-print(df_train.info()) #same data as before, no unnamed columns either which is good
+dog_train = df_train.loc[df_train['animal'] == 'dogs']
+cat_train = df_train.loc[df_train['animal'] == 'cats']
+dog_eval = df_eval.loc[df_eval['animal'] == 'dogs']
+cat_eval = df_eval.loc[df_eval['animal'] == 'cats']
 
-dog = df_train.loc[df_train['animal'] == 'dogs']
-cat = df_train.loc[df_train['animal'] == 'cats']
-
-print(len(df_train)) #double check length
-print(len(dog)+len(cat))
 
 #we can plot now! 
 #visualization is important!
-
-plt.title("Dog vs. Cat")
+plt.figure()
+plt.title("Dog vs. Cat Training")
 plt.xlabel("xvec")
 plt.ylabel("yvec")
-plt.scatter(dog.xvec,dog.yvec,color='blue',alpha=0.3)
-plt.scatter(cat.xvec,cat.yvec,color='red',alpha=0.3)#looks good so far
+plt.scatter(dog_train.xvec,dog_train.yvec,color='blue',alpha=0.3)
+plt.scatter(cat_train.xvec,cat_train.yvec,color='red',alpha=0.3)#looks good so far
+
+plt.figure()
+plt.title("Dog vs. Cat Eval")
+plt.ylabel("yvec")
+plt.scatter(dog_eval.xvec,dog_eval.yvec,color='blue',alpha=0.3)
+plt.scatter(cat_eval.xvec,cat_eval.yvec,color='red',alpha=0.3)#looks good so far
+
 
 #so we need to classify dogs and cats in a binary manner 
 #uhhh so dogs will be 1 because theyre better than cats
-
 df_train.animal=[1 if i =="dogs" else 0 for i in df_train.animal]
+df_eval.animal=[1 if i =="dogs" else 0 for i in df_eval.animal]
+x_train = df_train.drop(['animal'],axis = 1)
+y_train = df_train.animal.values
+x_test = df_eval.drop(['animal'],axis = 1)
+y_test = df_eval.animal.values
 
-x = df_train.drop(['animal'],axis = 1)
-y = df_train.animal.values
 
 #and then i guess im just going to use sklearn for gaussian analysis?
-#i dont think the homework wants me to write my own code entirely
-#although unsure
-
-from sklearn.model_selection import train_test_split
-x_train,x_test,y_train,y_test = train_test_split(x,y,test_size =0.3)
-
-
 from sklearn.naive_bayes import GaussianNB
 nb = GaussianNB()
 nb.fit(x_train,y_train)
+nb.fit(x_test,y_test)
 
 print("NB Score: ",nb.score(x_train,y_train))
-
 print("NB Score: ",nb.score(x_test,y_test))
 
 
 #%%compute and plot error rate
-
-
 #import eval and train data points
 df_train = pd.read_csv('train.csv',
                        header=4,
@@ -126,14 +127,12 @@ y_test = df_eval[:]['animal']
 #cat is 1-P("dog")
 prior_dog = np.arange(0.0,1.01,0.01)
 
-#make list for 1-p(dog)
-p_cat = []
+p_cat = []#make list for 1-p(dog)
 for val in np.nditer(prior_dog):
     p_cat.append(1-val)
     
 p_cat = np.array(p_cat)
-
-priorval = np.array((prior_dog,p_cat)).T
+priorval = np.array((p_cat,prior_dog)).T
 
 #when we calculate priors we need to assess
 #not entirely sure what the model he wants us to use but im assuming he wants qda?
@@ -156,13 +155,14 @@ for val,cval in priorval:
         qda_loop = QuadraticDiscriminantAnalysis(priors=[val,cval])
         print(val,cval)
         model_loop = qda_loop.fit(x_train,y_train)
+        #we only want to do this for the evaluation data (x_test)
         pred_loop = model_loop.predict(x_test)
         error_loop = metrics.accuracy_score(y_test,pred_loop)
         error_values.append(error_loop)
 
-plt.title("error")
-plt.xlabel("prior_values")
-plt.ylabel("accuracy")
+plt.title("Performance as a Function of Priors")
+plt.xlabel("Prior Probability")
+plt.ylabel("Accuracy//Error")
 plt.scatter(prior_dog,error_values,color='blue',alpha=0.3)
 
          
