@@ -116,10 +116,10 @@ df_eval = pd.read_csv('eval.csv',
                       header=4,
                       names=["animal","xvec","yvec"])
 
-X_train = df_train[:][['xvec','yvec']]
+x_train = df_train[:][['xvec','yvec']]
 y_train = df_train[:]['animal']
 
-X_test = df_eval[:][['xvec','yvec']]
+x_test = df_eval[:][['xvec','yvec']]
 y_test = df_eval[:]['animal']
 
 
@@ -133,19 +133,6 @@ for val in np.nditer(prior_dog):
     
 p_cat = np.array(p_cat)
 priorval = np.array((p_cat,prior_dog)).T
-
-#when we calculate priors we need to assess
-#not entirely sure what the model he wants us to use but im assuming he wants qda?
-
-#lets just start by repeating our previous code?
-df_train = df_train
-df_eval = df_eval
-x_train = X_train
-print(len(x_train))
-y_train = y_train
-print(len(y_train))
-x_test = X_test
-y_test = y_test
 
 #we need to forloop through the qda analysis and do it for every
 # #value of the priors but idk why this isnt working
