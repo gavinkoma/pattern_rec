@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 30 21:33:53 2023
+Created on Tue Jan 31 10:41:26 2023
 
 @author: gavinkoma
 """
-
 #%%import modules
 import pandas as pd
 import numpy as np
@@ -55,78 +54,70 @@ x_test = df_eval[:][['xvec','yvec']]
 dataset_test = np.array(x_test)
 label_test = np.array(df_eval[:]['animal'])
 
-#%% gotta make the fit
 
-vectors = dataset_train[:,0:2]
-labels = label_train[:]
+#%%predictions
+vectors = x_train #these are our samples
+labels = label_train #these are the binary encoded labels
 
 priors = {}
 means = {}
 covs = {}
-classes = np.unique(labels)
+classes = np.unique(labels) #our two unique classes, could vary if had more
 
 for unique in classes:
-    vectors_unique = vectors[labels==unique]
-    priors = {0:0.5,1:0.5}
-    means[unique] = np.mean(vectors_unique,axis=0)
-    covs[unique] = np.cov(vectors_unique,rowvar=False)
-        
-def prediction(vectors):
-    predictions_ = []
-    for vec in vectors:
-        posteriors = []
-        for uni in classes:
-            prior = np.log(priors[uni])
-            inv_cov = np.linalg.inv(covs[uni])
-            inv_cov_det = np.linalg.det(inv_cov)
-            diff = vec-means[uni]
-            likelihood = 0.5*np.log(inv_cov_det) - 0.5*diff.T @ inv_cov @ diff
-            posti = prior + likelihood
-            posteriors.append(posti)
-            
-        pred1 = classes[np.argmax(posteriors)]
-        predictions_.append(pred1)
-        predictions = np.array(predictions_)
-        
-    return predictions
-
-
-#%%run the test eval
-X = dataset_test[:,0:2]
-t = label_test[:]
-preds = prediction(X)
-accuracy_score_test = sum(label_test == preds)/len(label_test)
-print(accuracy_score_test)
-
-#%%alter the prior values with increments
-#make the range for the data
-prior_dog = np.arange(0.0,1.01,0.01)
-
-prior_cat = []#make list for 1-p(dog)
-for val in np.nditer(prior_dog):
-    prior_cat.append(1-val)
+    vectors_unique = vectors[labels == unique] #store a values according the size/length
+    priors = {0:0.5,1:0.5} #assume priors are equal
+    means[unique] = np.mean(vectors_unique,axis=0) #calculate the means of each vector
+    #need to calculate the covariance of the vectors that belong to the class
+    covs[unique] = np.cov(vectors_unique,rowvar=False) #each row /= variable, rowvar=false
     
-prior_cat = np.array(prior_cat)
-priorval = np.array((prior_cat,prior_dog)).T
+    
+#okay define the prediction function
+def prediction(vectors):
+    predictions=[] #store predictions here
+    for vec in vectors:
+        posteriors = [] #store posteriors here please
+        for unique in classes:
+            #priors will be the same for this
+            prior = np.log(priors[unique])#calculate log of the unique priors per class
+            #calculate the inverse cov matrix, 1 per unique class
+            inv_cov = np.linalg.inv(covs[unique])
+            #calcualte the determinant of the inv matrix
+            inv_cov_det = np.linalg.det(inv_cov)
+            #we will have to calculate the difference between
+            #each value and the mean --> difference!
+            difference = vec-means[unique]
+            #1/2(invcovdet)*1/2(transposed differences)*inverse cov * differences
+            #the @ symbol is just matrix multiplication
+            likelihood = 0.5*np.log(inv_cov_det) - 0.5*difference.T @ inv_cov @ difference
+            posterior = prior + likelihood
+            posteriors.append(posterior)
+        
+        pred = classes[np.argmax(posteriors)]
+        predictions.append(pred)
+    #return predictions for later use --> numpy array
+    return np.array(predictions)
 
-X = dataset_test[:,0:2]
-t = label_test[:]
+
+
+
+#%%unchanged
+X = dataset_train[:,0:2]
+t = label_train[:]
 
 priors = {}
 means = {}
 covs = {}
 classes = np.unique(t)
 
-def predict_range(X,cat,dog):
-    
-    for c in classes:
-        X_c = X[t==c]
-        priors = {0:cat,1:dog}
-        means[c] = np.mean(X_c,axis=0)
-        covs[c] = np.cov(X_c,rowvar=False)
-    
-    pred_ranges = []
-    
+for c in classes:
+    X_c = X[t==c]
+    priors = {0:0.5,1:0.5}
+    means[c] = np.mean(X_c,axis=0)
+    covs[c] = np.cov(X_c,rowvar=False)
+        
+def predict(X):
+    preds = []
     for x in X:
         posts = []
         for c in classes:
@@ -138,27 +129,14 @@ def predict_range(X,cat,dog):
             post = prior + likelihood
             posts.append(post)
             
-        predrange = classes[np.argmax(posts)]
-        pred_ranges.append(predrange)
+        pred = classes[np.argmax(posts)]
+        preds.append(pred)
+        
+    return np.array(preds)
 
-    return np.array(pred_ranges)
+#%%run the training eval
+preds = predict(X)
+accuracy_score_train = sum(label_train == preds)/len(label_train)
+print(accuracy_score_train)
 
-errorvalues = []
 
-for cat,dog in priorval:
-    pred_ranges = predict_range(X,cat,dog)
-    accuracy_score_range = sum(label_test == pred_ranges)/len(label_test)
-    errorvalues.append(accuracy_score_range)
-    print(cat,dog)
-    
-#%% show the plot
-rate = []
-for val in errorvalues:
-    trueerror = 1-val
-    rate.append(trueerror)
-
-plt.show()
-plt.title("Plot of Error Rate with Increasing Dog-Priors")
-plt.ylabel("Error Rate")
-plt.xlabel("Dog Prior")
-plt.scatter(prior_cat,rate)
