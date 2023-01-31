@@ -90,6 +90,12 @@ def prediction(vectors):
         
     return predictions
 
+#%%training eval
+X = dataset_train[:,0:2]
+t = label_test[:]
+preds = prediction(X)
+accuracy_score_training = sum(label_train == preds)/len(label_train)
+print(accuracy_score_training)
 
 #%%run the test eval
 X = dataset_test[:,0:2]
@@ -161,4 +167,4 @@ plt.show()
 plt.title("Plot of Error Rate with Increasing Dog-Priors")
 plt.ylabel("Error Rate")
 plt.xlabel("Dog Prior")
-plt.scatter(prior_cat,rate)
+plt.scatter(prior_dog,errorvalues)

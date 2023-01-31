@@ -118,8 +118,77 @@ predictions = predict(samples)
 accuracy_score_test = sum(labels == predictions)/len(labels)
 print(accuracy_score_test)
 
+#%%loop the code over 100 prior values
+#range our data
+prior_dog = np.arange(0.0,1.01,0.01)
+prior_cat = []#make list for 1-p(dog)
 
+for val in np.nditer(prior_dog):
+    prior_cat.append(1-val)
+    
+prior_cat = np.array(prior_cat)
+priorval = np.array((prior_cat,prior_dog)).T
 
+#redefine  the samples
+samples = dataset_test[:,0:2]
+labels = label_test[:]
+
+priors = {}
+means = {}
+covs = {}
+classes = np.unique(labels) #here we have two unique classes
+
+#place classes inside the function
+def predict(samples,cat,dog):
+    for vec in classes:
+        uni_c = samples[labels==vec]#store values
+        priors = {0:cat,1:dog}#priors are equal here
+        means[vec] = np.mean(uni_c,axis = 0)#calculate the means of each vector
+        #need to calculate the covariance of the vectors that belong to the class
+        covs[vec] = np.cov(uni_c,rowvar=False)#each row /= variable, rowvar=false
+        
+    predictions = []#store predictions
+    for val in samples:
+        posteriors = []#store posteriors
+        for vec in classes:
+            #priors will be the same here
+            prior = np.log(priors[vec])#calc log of unique priors per class
+            #calculate the inverse cov matrix, 1 per unique class
+            inv_cov = np.linalg.inv(covs[vec])
+            #calculate the determinant of the inv matrix
+            inv_cov_det = np.linalg.det(inv_cov)
+            #calculate the difference between val & mean
+            diff = val-means[vec]
+            #1/2(invcovdet)*1/2(transposed differences)*inverse cov * differences
+            #the @ symbol is just matrix multiplication           
+            likelihood = 0.5*np.log(inv_cov_det) - 0.5*diff.T @ inv_cov @ diff
+            post = prior + likelihood
+            posteriors.append(post)
+        pred = classes[np.argmax(posteriors)]
+        predictions.append(pred)
+    #return predictions for accuracy calc
+    return np.array(predictions)
+
+errorvalues = []
+
+for cat,dog in priorval:
+    predictions = predict(samples,cat,dog)
+    accuracy_score_range = sum(labels == predictions)/len(labels)
+    errorvalues.append(accuracy_score_range)
+    #print(accuracy_score_range)
+    print(cat,dog)
+    
+#%%
+rate = []
+for val in errorvalues:
+    trueerror = 1-val
+    rate.append(trueerror)
+
+plt.show()
+plt.title("Plot of Error Rate with Increasing Dog-Priors")
+plt.ylabel("Error Rate")
+plt.xlabel("Dog Prior")
+plt.scatter(prior_dog,errorvalues)
 
 
 
