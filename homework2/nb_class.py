@@ -77,7 +77,7 @@ def summarize_by_class(class_dict):
 #3. make our prediction next
 #4. and then we can finish the model by using test data
 
-def prior(class_dict,y):
+def prior(priorval):
     # prior_dict = {}
     # total_num = len(y)
     # for k,v in class_dict.items():
@@ -99,7 +99,7 @@ def likelihood(class_dict,test_instance):
 
 def make_prediction(training_set,label,testing_instance):
     class_dict = separate_by_class(training_set, label)
-    class_probability = prior(class_dict,label)
+    class_probability = prior(priorval)
     likelihood_dict = likelihood(class_dict,testing_instance)
     prediction = {k: class_probability[k] * likelihood_dict[k] for k in class_probability}
     return max(prediction.keys(), key=lambda k: prediction[k])
@@ -110,6 +110,7 @@ def naive_bayes(training_set,label,testing_set):
         prediction.append(make_prediction(training_set, label, instance))
     return np.array(prediction)
 
+#dont forget to change the values of priors if running this one
 y_pred = naive_bayes(dataset_train, label_train, dataset_test)
 accuracy_score_test = sum(label_test == y_pred)/len(label_test)
 print("error rate of evaluation data: ",accuracy_score_test)
@@ -124,15 +125,16 @@ print("error rate of training data: ",accuracy_score_train)
 #im literally not sure if my computer can handle this computationally because
 #it already takes forever to run it just once but i guess we can give it a toss
 
+#how do i vary the priors so much tho
+error_list = []
 
-
-error_values=[]
-
-for hera, aries in priorval:
-        y_pred = naive_bayes(dataset_train, label_train, dataset_test)
-        accuracy_score_test = sum(label_test == y_pred)/len(label_test)
-        accuracy_score_test = 1-accuracy_score_test
-        error_values.append(accuracy_score_test)
+for cat, dog in priorval:
+    y_pred = naive_bayes(dataset_train, label_train, dataset_test)
+    accuracy_score_test = sum(label_test == y_pred)/len(label_test)
+    print('By using the value of {cat} for cat prior and {dog} for dog prior'.format(cat = cat,dog=dog))
+    print("the error rate of evaluation data is: ",accuracy_score_test)
+    error_list.append(accuracy_score_test)
+    
 
 
 
