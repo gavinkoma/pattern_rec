@@ -82,7 +82,7 @@ def prior(priorval):
     # total_num = len(y)
     # for k,v in class_dict.items():
     #     prior_dict[k] = len(v)/total_num 
-    prior_dict = {1:0.5,0:0.5}
+    prior_dict = {0:cat,1:dog}
     return prior_dict
 
 def likelihood(class_dict,test_instance):
@@ -135,7 +135,12 @@ for cat, dog in priorval:
     print("the error rate of evaluation data is: ",accuracy_score_test)
     error_list.append(accuracy_score_test)
     
-
+    #write to a file
+    items = error_list
+    file = open('items.txt','a')
+    for item in items:
+    	file.write(str(item)+"\n")
+    file.close()
 
 
 
