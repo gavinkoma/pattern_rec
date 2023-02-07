@@ -78,9 +78,13 @@ plot = list(zip(samples, delta_mean))
 df2 = pd.DataFrame(plot, columns=['N_val', 'meanestimate'])
 print(df2.head())
 
-fig, ax = plt.subplots(figsize=(9, 6))
+fig, ax = plt.subplots()
 ax.scatter(df2['N_val'], df2['meanestimate'], s=80, color='r')
 ax.set_xscale("Log")
+plt.ylabel('Mean Estimates')
+plt.xlabel('N')
+plt.title('Mean Estimates of DataFrame (mu = 1.0)')
+
 
 # %% plot for all 6 datasets
 
