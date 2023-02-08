@@ -14,8 +14,6 @@ import os
 os.chdir(r'/Users/gavinkoma/Desktop/pattern_rec/homework4/data')
 print(os.getcwd())
 
-#%%begin by reading in data
-
 files = glob.glob('*.csv') #make a list of all the csv files
 
 d_all = {} #init dict
@@ -25,38 +23,76 @@ for file in files: #loop through .csv names
     d_all["{0}".format(file)] = pd.read_csv(file,header=None) 
 
 
-#%%doesnt say custom so lets use sklearn!
-#we need PCA, QDA, multi-class LDA --> compare to KNN & RNF
-#note that the scales /all/ need to be the same
+#%%
+# #%%doesnt say custom so lets use sklearn!
+# #we need PCA, QDA, multi-class LDA --> compare to KNN & RNF
+# #note that the scales /all/ need to be the same
 
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
+# from sklearn.decomposition import PCA
+# from sklearn.preprocessing import StandardScaler
+# from sklearn.linear_model import LogisticRegression
+
+# #lets write the CI-pca one first
+# #so we need to first read through the training data
+# #so we should really just look for the train*
+# #there are three label options (0,1,2)
+# #we should loop through the train values
+
+# sc = StandardScaler()
+# train = glob.glob('*train.csv')
+# d_train = {}
+# for file in train:
+#     #might as well keep the code objective with keys
+#     d_train["{}".format(file)] = pd.read_csv(file,delimiter=',',
+#                                              header=None)
+
+# #split the values as needed
+# #your y train is 2D, dont forget this
+# for file in train:
+#     #should have the labels
+#     d_train["train_labels_y_{}".format(file)] = d_train[file].iloc[:,0]
+#     #should have the x&y
+#     d_train["train_vectors_y{}".format(file)] = d_train[file].iloc[:,1:3] 
+    
+
+# trandict = {}
+# for file in train:
+#     d_train["yval_{}".format(file)] = sc.fit_transform(
+#         d_train['{}'.format(file)])
+#     trandict["labels_{}".format(file)] = d_train["train_labels_y_{}".format(file)]
+    
+
+# # pca = PCA(n_components=2)
+
+# # for file in train:
+# #     trandict["{}".format(file)] = pca.fit_transform(
+# #         trandict["{}".format(file)])
+    
+# # explained_variance = pca.explained_variance_ratio_
 
 
-#lets write the CI-pca one first
-#so we need to first read through the training data
-#so we should really just look for the train*
+#%% i guess we can plot first, im not sure what dev is
 
-train = glob.glob('*train.csv')
+import matplotlib.pyplot as plt
 
-d_train = {} #might as well keep the code objective with keys
-for file in train:
-    d_train["{}".format(file)] = pd.read_csv(file,header=None)
+data_keys = list(d_all.keys())
+data_val = list(d_all.values())
+count=0
+for kval in data_val:
+    plt.figure()
+    #print(kval[1],kval[2])
+    plt.scatter(kval[1],kval[2],c=kval[0],alpha=0.2)
+    plt.title(str(data_keys[0]))
+    plt.ylabel("y_vector")
+    plt.xlabel("x_vector")
+    plt.show()
+    count+=1
+    asdfasdfasdf
 
-x1 = d_train['data8train.csv']
-x1.rename(columns = {1:'x', 
-                       2:'y'},
-          inplace=True)
-x1.drop(columns = [0])
-
-
-
-
-
-
+     
 
 
 
 
 
-
+    
