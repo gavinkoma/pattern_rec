@@ -10,11 +10,14 @@ Created on Wed Feb  8 13:47:10 2023
 import pandas as pd
 import glob
 import os
+from matplotlib.colors import ListedColormap
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn import metrics
+import numpy as np
+import matplotlib.pyplot as plt
 #%%
 #lda wont be too bad, weve already visualized all the graphs as well 
 #lets start with 8
@@ -74,6 +77,35 @@ print("dev accuracy:\n",metrics.accuracy_score(y_dev,y_pred_dev))
 
 y_pred_test = classifier.predict(x_test)
 print("test accuracy:\n",metrics.accuracy_score(y_test,y_pred_test))
+
+#we should plot the decision bound
+
+x_set, y_set = x_test,y_test
+
+x1, x2 = np.meshgrid(np.arange(start = x_set[:, 0].min() - 1,
+                     stop = x_set[:, 0].max() + 1, step = 0.01),
+                     np.arange(start = x_set[:, 1].min() - 1,
+                     stop = x_set[:, 1].max() + 1, step = 0.01))
+  
+plt.contourf(x1, x2, classifier.predict(np.array([x1.ravel(),
+             x2.ravel()]).T).reshape(x1.shape), alpha = 0.75,
+             cmap = ListedColormap(('yellow', 'white', 'aquamarine')))
+
+plt.xlim(x1.min(), x1.max())
+plt.ylim(x2.min(), x2.max())
+  
+for i, j in enumerate(np.unique(y_set)):
+    plt.scatter(x_set[y_set == j, 0], x_set[y_set == j, 1],
+                c = ListedColormap(('red', 'green', 'blue'))(i), label = j)
+  
+# title for scatter plot
+plt.title('CI-PCA (Test set) for Dataset 8') 
+plt.xlabel('PC1') # for Xlabel
+plt.ylabel('PC2') # for Ylabel
+plt.xlim(-4,4)
+plt.ylim(-4,4)
+plt.legend()
+
 
 
 #%% data 9
@@ -136,6 +168,35 @@ print("dev accuracy:\n",metrics.accuracy_score(y_dev,y_pred_dev))
 y_pred_test = classifier.predict(x_test)
 print("test accuracy:\n",metrics.accuracy_score(y_test,y_pred_test))
 
+#we should plot the decision bound
+
+x_set, y_set = x_test,y_test
+
+x1, x2 = np.meshgrid(np.arange(start = x_set[:, 0].min() - 1,
+                     stop = x_set[:, 0].max() + 1, step = 0.01),
+                     np.arange(start = x_set[:, 1].min() - 1,
+                     stop = x_set[:, 1].max() + 1, step = 0.01))
+  
+plt.contourf(x1, x2, classifier.predict(np.array([x1.ravel(),
+             x2.ravel()]).T).reshape(x1.shape), alpha = 0.75,
+             cmap = ListedColormap(('yellow', 'white', 'aquamarine')))
+
+plt.xlim(x1.min(), x1.max())
+plt.ylim(x2.min(), x2.max())
+  
+for i, j in enumerate(np.unique(y_set)):
+    plt.scatter(x_set[y_set == j, 0], x_set[y_set == j, 1],
+                c = ListedColormap(('red', 'green', 'blue'))(i), label = j)
+  
+# title for scatter plot
+plt.title('CI-PCA (Test set) for Dataset 9') 
+plt.xlabel('PC1') # for Xlabel
+plt.ylabel('PC2') # for Ylabel
+plt.xlim(-10,10)
+plt.ylim(-10,10)
+plt.legend()
+  
+
 #%% data 10
 #lda wont be too bad, weve already visualized all the graphs as well 
 #lets start with 9
@@ -195,6 +256,35 @@ print("dev accuracy:\n",metrics.accuracy_score(y_dev,y_pred_dev))
 
 y_pred_test = classifier.predict(x_test)
 print("test accuracy:\n",metrics.accuracy_score(y_test,y_pred_test))
+
+#we should plot the decision bound
+
+x_set, y_set = x_test,y_test
+
+x1, x2 = np.meshgrid(np.arange(start = x_set[:, 0].min() - 1,
+                     stop = x_set[:, 0].max() + 1, step = 0.01),
+                     np.arange(start = x_set[:, 1].min() - 1,
+                     stop = x_set[:, 1].max() + 1, step = 0.01))
+  
+plt.contourf(x1, x2, classifier.predict(np.array([x1.ravel(),
+             x2.ravel()]).T).reshape(x1.shape), alpha = 0.75,
+             cmap = ListedColormap(('yellow', 'white', 'aquamarine')))
+
+plt.xlim(x1.min(), x1.max())
+plt.ylim(x2.min(), x2.max())
+  
+for i, j in enumerate(np.unique(y_set)):
+    plt.scatter(x_set[y_set == j, 0], x_set[y_set == j, 1],
+                c = ListedColormap(('red', 'green', 'blue'))(i), label = j)
+  
+# title for scatter plot
+plt.title('CI-PCA (Test set) for Dataset 10') 
+plt.xlabel('PC1') # for Xlabel
+plt.ylabel('PC2') # for Ylabel
+plt.ylim(-4,4)
+plt.xlim(-4,4)
+plt.legend()
+  
 
 #%%
 #lda wont be too bad, weve already visualized all the graphs as well 

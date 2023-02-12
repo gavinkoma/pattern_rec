@@ -14,7 +14,8 @@ import numpy as np
 from sklearn.model_selection import cross_val_score
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.model_selection import RepeatedStratifiedKFold
-
+from sklearn.metrics import confusion_matrix
+from sklearn.preprocessing import StandardScaler
 #%%
 #lda wont be too bad, weve already visualized all the graphs as well 
 #lets start with 8
@@ -65,16 +66,31 @@ cv = RepeatedStratifiedKFold(n_splits=10,n_repeats=3,random_state=1)
 
 scores_train = cross_val_score(model, x_train,y_train,scoring='accuracy',
                          cv=cv,n_jobs=1)
+y_train_pred = model.predict(x_train)
+
 
 scores_dev=cross_val_score(model, x_dev,y_dev,scoring='accuracy',
                          cv=cv,n_jobs=1)
+y_dev_pred = model.predict(x_dev)
+
 
 scores_eval=cross_val_score(model, x_test,y_test,scoring='accuracy',
                          cv=cv,n_jobs=1)
+y_test_pred = model.predict(x_test)
 
 print("train score: ",np.mean(scores_train))
 print("dev score: ",np.mean(scores_dev))
 print("test score: ",np.mean(scores_eval))
+
+
+plt.scatter(x_test.iloc[:,0],
+            x_test.iloc[:,1],
+            c=y_test,
+            alpha=0.7)
+plt.title('LDA (Test set) for Dataset 8')
+plt.xlim(-4,4)
+plt.ylim(-4,4)
+
 
 #%%
 #lda wont be too bad, weve already visualized all the graphs as well 
@@ -137,6 +153,13 @@ print("train score: ",np.mean(scores_train))
 print("dev score: ",np.mean(scores_dev))
 print("test score: ",np.mean(scores_eval))
 
+plt.scatter(x_test.iloc[:,0],
+            x_test.iloc[:,1],
+            c=y_test,
+            alpha=0.7)
+plt.xlim(-10,10)
+plt.ylim(-10,10)
+plt.title('LDA (Test set) for Dataset 9')
 
 #%%
 #lda wont be too bad, weve already visualized all the graphs as well 
@@ -198,6 +221,14 @@ scores_eval=cross_val_score(model, x_test,y_test,scoring='accuracy',
 print("train score: ",np.mean(scores_train))
 print("dev score: ",np.mean(scores_dev))
 print("test score: ",np.mean(scores_eval))
+
+plt.scatter(x_test.iloc[:,0],
+            x_test.iloc[:,1],
+            c=y_test,
+            alpha=0.7)
+plt.xlim(-4,4)
+plt.ylim(-4,4)
+plt.title('LDA (Test set) for Dataset 10')
 
 
 #%% okay so now we /need/ to train on both dev & train

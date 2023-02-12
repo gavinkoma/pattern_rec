@@ -15,7 +15,12 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn import metrics
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+import pylab as pl
+from scipy import linalg
 
+
+#%%
 os.chdir(r'/Users/gavinkoma/Desktop/pattern_rec/homework4/data')
 print(os.getcwd())
 
@@ -30,9 +35,6 @@ for file in files: #loop through .csv names
 #were going to start this with just data 8 because im getting confused
 #with the dynamic loops i tried to do earlier
 
-
-
-#%%
 #lets organize the data
 df_train = pd.DataFrame(d_all['data8train.csv'])
 df_train.columns = ['labels','vec1','vec2']
@@ -73,7 +75,14 @@ model = qda.fit(x_train,y_train)
 print(model.priors_)
 print(model.means_)
 
-
+#we need to plot
+plt.scatter(x_test.iloc[:,0],
+            x_test.iloc[:,1],
+            c=y_test,
+            alpha=0.7)
+plt.title('QDA (Test set) for Dataset 8')
+plt.xlim(-4,4)
+plt.ylim(-4,4)
       
 #%%
 #do the same for 9
@@ -139,6 +148,15 @@ print(confusion_matrix(pred,y_test))
 print("the score for the dev data:\n",classification_report(y_test, pred, digits=4))
 
 
+plt.scatter(x_test.iloc[:,0],
+            x_test.iloc[:,1],
+            c=y_test,
+            alpha=0.7)
+plt.xlim(-10,10)
+plt.ylim(-10,10)
+plt.title('QDA (Test set) for Dataset 9')
+      
+
 #%% for data 10
 os.chdir(r'/Users/gavinkoma/Desktop/pattern_rec/homework4/data')
 print(os.getcwd())
@@ -201,6 +219,16 @@ print(np.unique(pred,return_counts=True))
 print(confusion_matrix(pred,y_test))
 print("the score for the dev data:\n",classification_report(y_test, pred, digits=4))
 
+c = ListedColormap(('red', 'green', 'blue'))
+
+plt.scatter(x_test.iloc[:,0],
+            x_test.iloc[:,1],
+            c=y_test,
+            alpha=0.7)
+
+plt.ylim(-4,4)
+plt.xlim(-4,4)
+plt.title('QDA (Test set) for Dataset 10')
 
 #%%okay so back to data 8 but concat train & dev as the training data
 
