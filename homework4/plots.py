@@ -11,7 +11,7 @@ import pandas as pd
 import glob
 import os
 import matplotlib.pyplot as plt
-import matplotlib 
+import matplotlib
 
 os.chdir(r'/Users/gavinkoma/Desktop/pattern_rec/homework4/data')
 print(os.getcwd())
@@ -25,24 +25,30 @@ for file in files: #loop through .csv names
     d_all["{0}".format(file)] = pd.read_csv(file,header=None) 
 
 name_dict = {
-    0: "data8dev",
-    1: "data8eval",
-    2: "data8train",
-    3: "data8train",
-    4: "data9dev",
-    5: "data9eval",
-    6: "data9train",
-    7: "data10dev",
-    8: "data10eval",
-    9: "data10train"
+    0: "data10train",#data10train
+    1: "data9train", #data9train
+    2: "data8train", #data8train
+    3: "data9eval", #data9eval
+    4: "data8dev",#data8dev
+    5: "data10dev",#data10dev
+    6: "data10val",#data10eval
+    7: "data8eval", #data8eval
+    8: "data9dev" #data9dev
 }
+
+custom_xlim = (0, 100)
+custom_ylim = (-100, 100)
 
 #%% plots
 
 data_val = list(d_all.values())
+
 for i,kval in enumerate(data_val):
+    plt.figure()
     #print(kval[1],kval[2])
     plt.scatter(kval[1],kval[2],c=kval[0],alpha=0.2)
+    plt.xlim(-2,2)
+    plt.ylim(-2,2)
     plt.title(name_dict[i])
     plt.ylabel("y_vector")
     plt.xlabel("x_vector")
