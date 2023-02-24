@@ -4,6 +4,7 @@
 Created on Wed Feb 22 12:15:57 2023
 
 @author: gavinkoma
+
 """
 #%%import and chdir
 import pandas as pd
@@ -75,4 +76,5 @@ for i,val in enumerate([1,2,4,8]):
 for i,val in enumerate([1,2,4,8]):
     gmm = GaussianMixture(n_components=val,random_state=0)
     GM_plot(x_eval,y_eval)
+
 
