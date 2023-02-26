@@ -37,6 +37,7 @@ name_dict = {0:"Train",
 def plot(file):
     plt.figure()
     #print(kval[1],kval[2])
+
     plt.scatter(file[:,1],file[:,2],c=file[:,0],alpha=0.2)
     plt.title(name_dict[count])
     
