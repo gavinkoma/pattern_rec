@@ -63,31 +63,17 @@ for i,val in enumerate([1,2,4,8]):
 
 
 
+#%%
+#gmm = GaussianMixture(n_components=val,random_state=0)
+from sklearn.mixture import GaussianMixture as GMM
 
 
+n_components = np.arange(1, 21)
+models = [GMM(n, covariance_type='full', random_state=0).fit(x_train) for n in n_components]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+plt.plot(n_components, [m.aic(x_train) for m in models], label='AIC')
+plt.legend(loc='best')
+plt.xlabel('n_components')
 
 
 
