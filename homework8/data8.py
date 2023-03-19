@@ -11,8 +11,9 @@ import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn import metrics
 
-os.chdir(r'/Users/gavinkoma/Desktop/pattern_rec/homework8/data')
+os.chdir(r'/Users/gavinkoma/Desktop/pattern_rec/homework8/data/data8')
 print(os.getcwd())
 
 train = pd.read_csv("train.csv",header=None)
@@ -29,11 +30,11 @@ xvalues_dev = pd.DataFrame([dev.iloc[:,1],dev.iloc[:,2]]).T
 xvalues_train = pd.DataFrame([train.iloc[:,1],train.iloc[:,2]]).T
 xvalues_eval = pd.DataFrame([evalu.iloc[:,1],evalu.iloc[:,2]]).T
 
-training_data = pd.concat([xvalues_dev, xvalues_train],ignore_index=True)
-label_data = pd.concat([labels_dev, labels_train],ignore_index=True)
+training_data = xvalues_dev
+label_data = labels_dev
 
 
-neighbors_val = np.arange(1,15)
+neighbors_val = np.arange(1,10)
 
 train_accuracy = np.empty(len(neighbors_val))
 
@@ -63,9 +64,10 @@ plt.plot(neighbors_val, dev_test_accuracy, label = 'dev dataset accuracy')
 plt.plot(neighbors_val, train_test_accuracy, label = 'train dataset accuracy')
 plt.plot(neighbors_val, eval_test_accuracy, label = 'eval dataset accuracy')
 
-
+print(train_accuracy)
 
 plt.legend()
+plt.title("dataset8")
 plt.xlabel('n_neighbors')
 plt.ylabel('Accuracy')
 plt.show()
@@ -93,24 +95,28 @@ plt.show()
 
 
 plt.figure()
-kmeans = KMeans(n_clusters=8, init='k-means++', 
+kmeans = KMeans(n_clusters=4, init='k-means++', 
                 max_iter=300, n_init=10, random_state=0)
 pred_y = kmeans.fit_predict(training_data)
 plt.scatter(training_data.iloc[:,0], training_data.iloc[:,1])
 plt.scatter(kmeans.cluster_centers_[:, 0], 
             kmeans.cluster_centers_[:, 1], s=300, c='red')
+
+plt.title('KMeans Graph with 4 Clusters')
+plt.xlabel("feature 1 vector")
+plt.ylabel("feature 2 vector")
 plt.show()
 
 
+#%%
 
+scoredev = metrics.accuracy_score(labels_dev,kmeans.predict(xvalues_dev))
+scoretrain = metrics.accuracy_score(labels_train,kmeans.predict(xvalues_train))
+scoreeval = metrics.accuracy_score(labels_eval,kmeans.predict(xvalues_eval))
 
-
-
-
-
-
-
-
+print("dev accuracy score: " + str(scoredev) +'\n\n')
+print("train accuracy score: " + str(scoretrain) +'\n\n')
+print("eval accuracy score: " + str(scoreeval) +'\n\n')
 
 
 
