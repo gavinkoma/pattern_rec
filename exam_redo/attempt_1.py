@@ -6,11 +6,12 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn import neighbors,datasets
+from sklearn import neighbors
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 from matplotlib.colors import ListedColormap
 import seaborn as sns
+from mlxtend.plotting import plot_decision_regions
 
 os.chdir("/Users/gavinkoma/Desktop/pattern_rec/exam_redo")
 
@@ -74,26 +75,35 @@ plt.show()
 #okay so we need to run a random forest and also plot the dec. boundary again
 #err maybe we dont need to plot the boundary and we can just verify values
 
-values = pd.DataFrame([[-0.50, 0.50, 0],
-                       [-0.50, -0.50, 0],
-                       [0.50, -0.50, 0],
-                       [0.50, 0.50, 0],
-                       [0.00, 0.00, 0],
-                       [-0.45,0.45,1],
-                       [-0.45,-0.45,1],
-                       [0.45,0.45,1],
-                       [0.45,-0.45,1]])
+randomf_val = pd.read_excel("q2.xlsx",header = None)
 
-plt.scatter(values[0],values[1],c=values[2])
+plt.figure()
+plt.scatter(randomf_val.iloc[:,0],randomf_val.iloc[:,1],c=randomf_val.iloc[:,2])
 plt.xlim(-1,1)
 plt.ylim(-1,1)
-test_values = values.iloc[:,0:2]
-test_features = values.iloc[:,2]
+test_values = randomf_val.iloc[:,0:2]
+test_features = randomf_val.iloc[:,2]
 
-rf = RandomForestClassifier(n_estimators=3,random_state=45)
-                      
-rf.fit(values.iloc[:,0:1],values.iloc[:,2])
-y_pred = rf.predict(test_features)
+forest = RandomForestClassifier(criterion = 'gini',
+                                n_estimators=3,
+                                random_state=45,
+                                n_jobs=(None))
+
+forest.fit(test_values,test_features)
+
+test_values = test_values.to_numpy()
+test_features = test_features.to_numpy()
+
+fig,ax = plt.subplots()
+plot_decision_regions(test_values, test_features,clf=forest)
+plt.xlabel('Feature 0')
+plt.ylabel('Feature 1')
+plt.legend(loc='upper left')
+plt.tight_layout()
+plt.show()
+
+
+
 
 
 
