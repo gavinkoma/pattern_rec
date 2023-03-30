@@ -7,6 +7,18 @@ Created on Wed Mar 29 17:55:30 2023
 """
 import os
 import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
+from mlxtend.plotting import plot_decision_regions
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.metrics import roc_curve, roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
+from sklearn import svm
+import seaborn as sns
 
 os.chdir("/Users/gavinkoma/Desktop/pattern_rec/homework10/data")
 
@@ -17,11 +29,6 @@ evaldata = pd.read_csv("eval_03.csv",header=None)
 
 
 #%%we need to run randomforest first
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
-import matplotlib.pyplot as plt
-from mlxtend.plotting import plot_decision_regions
-
 #before using pca we whould train the model and use a logistic
 #regression to just see how well it performs
 x_train = traindata.iloc[:,1:3]
@@ -32,44 +39,46 @@ x_eval = evaldata.iloc[:,1:3]
 y_eval = evaldata.iloc[:,0]
 
 plt.figure()
-plt.scatter(traindata.iloc[:,1],traindata.iloc[:,2],c=traindata.iloc[:,0])
+sns.scatterplot(x=traindata.iloc[:,1],
+                y=traindata.iloc[:,2],
+                hue = traindata.iloc[:,0]
+                ).set(title="Training Data (D10)")
 
 
-rf = RandomForestClassifier(criterion = 'gini',
-                            n_estimators=3,
-                            random_state=45,
-                            n_jobs=(None))
 
-rf.fit(x_train,y_train)
+for val in np.arange(1,11,1):    
+    rf = RandomForestClassifier(criterion = 'gini',
+                                n_estimators=val,
+                                random_state=45,
+                                n_jobs=(None))
+    rf.fit(x_train,y_train)
 
-x_train = x_train.to_numpy()
-y_train = y_train.to_numpy()
+    y_pred = rf.predict(x_train)
+    accuracy = accuracy_score(y_train,y_pred)
+    print("Accuracy with {} tree(s): ".format(val),accuracy)
 
-
-y_pred = rf.predict(x_train)
-
-#train data
-fig,ax = plt.subplots()
-plot_decision_regions(x_train, y_train,clf=rf)
-plt.xlabel('Feature 0')
-plt.ylabel('Feature 1')
-plt.legend(loc='upper left')
-plt.tight_layout()
-plt.show()
-
-
-accuracy = accuracy_score(y_train,y_pred)
-print("Accuracy: ",accuracy)
-
-
+    x_train = x_train.to_numpy()
+    y_train = y_train.to_numpy()
+    
+    #train data
+    fig,ax = plt.subplots()
+    plot_decision_regions(x_train, y_train,clf=rf)
+    plt.xlabel('Feature 0')
+    plt.ylabel('Feature 1')
+    plt.title('RNF Decision Boundary with {} Tree(s)'.format(val))
+    plt.legend(loc='upper left')
+    plt.tight_layout()
+    plt.show()
+    
+    x_train = traindata.iloc[:,1:3]
+    y_train = traindata.iloc[:,0]
 
 #%%we want to plot the performance of the eval set not dev set
-import numpy as np
-
-
 x_eval = evaldata.iloc[:,1:3]
 y_eval = evaldata.iloc[:,0]
 
+rnf_accuracy = []
+decision_trees = []
 for val in np.arange(1,50,1):
     rf = RandomForestClassifier(criterion = 'gini',
                                 n_estimators=val,
@@ -79,20 +88,26 @@ for val in np.arange(1,50,1):
     y_pred=rf.predict(x_eval)
     accuracy = accuracy_score(y_eval,y_pred)
     print("accuracy with {} tree(s): ".format(val),accuracy)
-
+    rnf_accuracy.append(accuracy)
+    decision_trees.append(val)
+    
+plt.figure()
+sns.color_palette("pastel")
+sns.lineplot(x=decision_trees,
+             y=rnf_accuracy).set(title="Accuracy as a Function of Decision Trees",
+                                 xlabel="Number of Decision Trees",
+                                 ylabel="Accuracy Rate")
+ 
+plt.show()
 
 #it doesnt seem like we are able to get higher than like 66% accuracy
 
 #%%do the SVM
-from sklearn import metrics
-from sklearn import svm
-
 #this is too big of a dataset for a kernal svm sooo lets delete like 90% of our data
 train_shuffle = traindata.sample(frac=1)
 train_10 = train_shuffle.iloc[0:10000,:]
 x_10_train = train_10.iloc[:,1:3]
 y_10_train = train_10.iloc[:,0]
-
 
 clf = svm.SVC(kernel="linear") #linear kernel
 clf.fit(x_10_train,y_10_train)
@@ -106,7 +121,6 @@ for val in np.arange(1,6,1):
     accuracy = accuracy_score(y_eval,y_pred_poly)
     print("accuracy for {} degree".format(val),accuracy)
 
-
 svclassifier = svm.SVC(kernel='rbf')
 svclassifier.fit(x_10_train,y_10_train)
 y_pred_rbf = svclassifier.predict(x_eval)
@@ -119,16 +133,7 @@ y_pred_sig = svclassifier.predict(x_eval)
 accuracy = accuracy_score(y_eval,y_pred_sig)
 print("accuracy: ",accuracy)
 
-
 #%% part 2
-
-from sklearn.model_selection import train_test_split
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.metrics import roc_curve, roc_auc_score
-import matplotlib.pyplot as plt
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
-
 traindata = pd.read_csv("train_03.csv",header=None)
 devdata = pd.read_csv("dev_03.csv",header=None)
 evaldata = pd.read_csv("eval_03.csv",header=None)
@@ -152,7 +157,7 @@ fpr, tpr, thresholds = roc_curve(y_eval, y_pred_qda)
 auc_qda = roc_auc_score(y_eval, y_pred_qda)
 
 
-#this is too big of a dataset for a kernal svm sooo lets delete like 90% of our data
+#this is too big of a dataset for a kernal svm sooo lets delete #like 90% of our data
 train_shuffle = traindata.sample(frac=1)
 train_10 = train_shuffle.iloc[0:10000,:]
 x_10_train = train_10.iloc[:,1:3]
