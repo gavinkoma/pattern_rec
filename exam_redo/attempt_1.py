@@ -81,6 +81,8 @@ plt.figure()
 plt.scatter(randomf_val.iloc[:,0],randomf_val.iloc[:,1],c=randomf_val.iloc[:,2])
 plt.xlim(-1,1)
 plt.ylim(-1,1)
+
+
 test_values = randomf_val.iloc[:,0:2]
 test_features = randomf_val.iloc[:,2]
 

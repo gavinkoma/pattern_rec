@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Mar 29 17:55:30 2023
+
+@author: gavinkoma
+"""
+import os
+import pandas as pd
+
+os.chdir("/Users/gavinkoma/Desktop/pattern_rec/homework10/data")
+
+
+traindata = pd.read_csv("train_03.csv",header=None)
+devdata = pd.read_csv("dev_03.csv",header=None)
+evaldata = pd.read_csv("eval_03.csv",header=None)
+
+
+#%%we need to run randomforest first
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
+from mlxtend.plotting import plot_decision_regions
+
+#before using pca we whould train the model and use a logistic
+#regression to just see how well it performs
+x_train = traindata.iloc[:,1:3]
+y_train = traindata.iloc[:,0]
+x_dev = devdata.iloc[:,1:3]
+y_dev = devdata.iloc[:,0]
+x_eval = evaldata.iloc[:,1:3]
+y_eval = evaldata.iloc[:,0]
+
+plt.figure()
+plt.scatter(traindata.iloc[:,1],traindata.iloc[:,2],c=traindata.iloc[:,0])
+
+
+rf = RandomForestClassifier(criterion = 'gini',
+                            n_estimators=3,
+                            random_state=45,
+                            n_jobs=(None))
+
+rf.fit(x_train,y_train)
+
+x_train = x_train.to_numpy()
+y_train = y_train.to_numpy()
+
+
+y_pred = rf.predict(x_train)
+
+#train data
+fig,ax = plt.subplots()
+plot_decision_regions(x_train, y_train,clf=rf)
+plt.xlabel('Feature 0')
+plt.ylabel('Feature 1')
+plt.legend(loc='upper left')
+plt.tight_layout()
+plt.show()
+
+
+accuracy = accuracy_score(y_train,y_pred)
+print("Accuracy: ",accuracy)
+
+
+
+#%%we want to plot the performance of the eval set not dev set
+import numpy as np
+
+
+x_eval = evaldata.iloc[:,1:3]
+y_eval = evaldata.iloc[:,0]
+
+for val in np.arange(1,50,1):
+    rf = RandomForestClassifier(criterion = 'gini',
+                                n_estimators=val,
+                                random_state=45,
+                                n_jobs=(None))
+    rf.fit(x_train,y_train)
+    y_pred=rf.predict(x_eval)
+    accuracy = accuracy_score(y_eval,y_pred)
+    print("accuracy with {} tree(s): ".format(val),accuracy)
+
+
+#it doesnt seem like we are able to get higher than like 66% accuracy
+
+#%%do the SVM
+from sklearn import metrics
+from sklearn import svm
+
+#this is too big of a dataset for a kernal svm sooo lets delete like 90% of our data
+train_shuffle = traindata.sample(frac=1)
+train_10 = train_shuffle.iloc[0:10000,:]
+x_10_train = train_10.iloc[:,1:3]
+y_10_train = train_10.iloc[:,0]
+
+
+clf = svm.SVC(kernel="linear") #linear kernel
+clf.fit(x_10_train,y_10_train)
+y_pred = clf.predict(x_eval)
+print("accuracy: ",metrics.accuracy_score(y_eval,y_pred))
+
+for val in np.arange(1,6,1):
+    svclassifier = svm.SVC(kernel='poly', degree = val)
+    svclassifier.fit(x_10_train,y_10_train)
+    y_pred_poly = svclassifier.predict(x_eval)
+    accuracy = accuracy_score(y_eval,y_pred_poly)
+    print("accuracy for {} degree".format(val),accuracy)
+
+
+svclassifier = svm.SVC(kernel='rbf')
+svclassifier.fit(x_10_train,y_10_train)
+y_pred_rbf = svclassifier.predict(x_eval)
+accuracy = accuracy_score(y_eval,y_pred_rbf)
+print("accuracy: ",accuracy)
+
+svclassifier = svm.SVC(kernel='sigmoid')
+svclassifier.fit(x_10_train,y_10_train)
+y_pred_sig = svclassifier.predict(x_eval)
+accuracy = accuracy_score(y_eval,y_pred_sig)
+print("accuracy: ",accuracy)
+
+
+#%% part 2
+
+from sklearn.model_selection import train_test_split
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.metrics import roc_curve, roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+
+traindata = pd.read_csv("train_03.csv",header=None)
+devdata = pd.read_csv("dev_03.csv",header=None)
+evaldata = pd.read_csv("eval_03.csv",header=None)
+
+#before using pca we whould train the model and use a logistic
+#regression to just see how well it performs
+x_train = traindata.iloc[:,1:3]
+y_train = traindata.iloc[:,0]
+x_eval = evaldata.iloc[:,1:3]
+y_eval = evaldata.iloc[:,0]
+
+
+# Fit QDA to the training data
+qda = QuadraticDiscriminantAnalysis()
+qda.fit(x_train, y_train)
+# Make predictions on the test data
+y_pred_qda = qda.predict(x_eval)
+# Calculate the FPR and TPR at different threshold values
+fpr, tpr, thresholds = roc_curve(y_eval, y_pred_qda)
+# Calculate the AUC score
+auc_qda = roc_auc_score(y_eval, y_pred_qda)
+
+
+#this is too big of a dataset for a kernal svm sooo lets delete like 90% of our data
+train_shuffle = traindata.sample(frac=1)
+train_10 = train_shuffle.iloc[0:10000,:]
+x_10_train = train_10.iloc[:,1:3]
+y_10_train = train_10.iloc[:,0]
+
+clf = svm.SVC(kernel="linear") #linear kernel
+clf.fit(x_10_train,y_10_train)
+y_pred_svm = clf.predict(x_eval)
+fpr_svm,tpr_svm,threshold_svm = roc_curve(y_eval,y_pred_svm)
+auc_svm = roc_auc_score(y_eval, y_pred_svm)
+
+
+
+# Fit RF to the training data
+rf = RandomForestClassifier(criterion = 'gini',
+                            n_estimators=100,
+                            random_state=45,
+                            n_jobs=(None))
+rf.fit(x_train, y_train)
+# Make predictions on the test data
+y_pred_rf = rf.predict(x_eval)
+# Calculate the FPR and TPR at different threshold values
+fpr_rf, tpr_rf, thresholds_rf = roc_curve(y_eval, y_pred_rf)
+# Calculate the AUC score
+auc_rf = roc_auc_score(y_eval, y_pred_rf)
+
+
+# Plot the ROC curve
+plt.figure()
+plt.plot(fpr_rf, tpr_rf, label='RF (AUC = %0.2f)' % auc_rf)
+plt.plot(fpr_svm, tpr_svm, label='SVM (AUC = %0.2f)' % auc_svm)
+plt.plot(fpr, tpr, label='QDA (AUC = %0.2f)' % auc_qda)
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
