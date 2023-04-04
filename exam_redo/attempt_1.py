@@ -108,4 +108,34 @@ plt.show()
 
 
 
+#%%we want to plot the performance of the eval set not dev set
+x_eval = devdata.iloc[:,1:3]
+y_eval = devdata.iloc[:,0]
+
+rnf_accuracy = []
+decision_trees = []
+for val in np.arange(1,50,1):
+    rf = RandomForestClassifier(criterion = 'gini',
+                                n_estimators=val,
+                                random_state=45,
+                                n_jobs=(None))
+    rf.fit(x_train,y_train)
+    y_pred=rf.predict(x_eval)
+    accuracy = accuracy_score(y_eval,y_pred)
+    print("accuracy with {} tree(s): ".format(val),accuracy)
+    rnf_accuracy.append(accuracy)
+    decision_trees.append(val)
+    
+plt.figure()
+sns.color_palette("pastel")
+sns.lineplot(x=decision_trees,
+             y=rnf_accuracy).set(title="Accuracy as a Function of Decision Trees",
+                                 xlabel="Number of Decision Trees",
+                                 ylabel="Accuracy Rate")
+ 
+plt.show()
+
+
+
+
 

@@ -1,0 +1,20 @@
+# version = csv_v1.0.0
+# bname = f001189.csv
+# duration = 3664.0000 secs
+# map file: /data/isip/tools/master/nfc/lib/nedc_eas_default_montage.txt
+# annotation label file: /data/isip/tools/master/nfc/lib/default_map.txt
+#
+channel,start_time,stop_time,label,confidence
+TERM,1.0000,215.0000,0,1.000000
+TERM,216.0000,541.0000,0,1.000000
+TERM,542.0000,628.0000,0,1.000000
+TERM,629.0000,802.0000,0,1.000000
+TERM,803.0000,1288.0000,0,1.000000
+TERM,1289.0000,1422.0000,0,1.000000
+TERM,1423.0000,1551.0000,0,1.000000
+TERM,1552.0000,1911.0000,0,1.000000
+TERM,1912.0000,2207.0000,0,1.000000
+TERM,2208.0000,2596.0000,0,1.000000
+TERM,2597.0000,2996.0000,0,1.000000
+TERM,2997.0000,3405.0000,0,1.000000
+TERM,3406.0000,3664.0000,4,1.000000
