@@ -13,7 +13,6 @@ import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 import torch
-import torch.nn as nn
 
 #%%import data and do very basic graphs
 os.chdir("/Users/gavinkoma/Desktop/pattern_rec/homework11/data")
@@ -45,11 +44,11 @@ sns.scatterplot(x=eval_data.iloc[:,1],
 #%%implementation of SLP
 x = torch.ones(1,requires_grad=True)
 print(x.grad) #returns None initially
-
 y=x+2
 z=y*y*2
 z.backward()
 print(x.grad) #this is partial z/x
+
 
 class Feedforward(torch.nn.Module):
     def __init__(self, input_size, hidden_size):
@@ -89,17 +88,18 @@ x_eval = torch.FloatTensor(x_eval)
 y_eval = torch.FloatTensor(y_eval)
 
 #%%implement the model w/ tensors
-model = Feedforward(2,200)
+model = Feedforward(2,100)
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.SGD(model.parameters(), 
                             lr = 0.01)
 
-#%%train the model
+#%%evaluate before training
 model.eval()
 y_pred = model(x_eval)
 before_train = criterion(y_pred.squeeze(),y_eval)
 print('test loss before training',before_train.item())
 
+#%%evluate after training
 model.train()
 epoch = 50
 
@@ -141,8 +141,8 @@ def accuracy(outputs, labels):
 accuracy_train = accuracy(x_train,y_train)
 accuracy_eval = accuracy(y_pred,y_eval)
 
-print("Accuracy of Train: ", accuracy_train)
-print("Accuracy of Eval: ", accuracy_eval)
+print("Error of Train: ", str(1-accuracy_train))
+print("Error of Eval: ", str(1-accuracy_eval))
 
 
 
