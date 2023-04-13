@@ -67,26 +67,26 @@ history = model.fit(X_train,y_train,
                     verbose=1,
                     validation_data=(X_test,y_test))
 
-# #%%
-# error = []
-# for val in history.history['accuracy']:
-#     errorval = 1-val
-#     error.append(errorval)
+#%%
+error = []
+for val in history.history['accuracy']:
+    errorval = 1-val
+    error.append(errorval)
 
-# plt.plot(history.history['accuracy'])
-# plt.plot(history.history['val_accuracy'])
-# plt.title('model accuracy')
-# plt.ylabel('accuracy')
-# plt.xlabel('epoch')
-# plt.legend(['train', 'val'], loc='upper left')
-# plt.show()
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.show()
 
-# plt.figure()
-# plt.plot(error)
-# plt.title("error rate")
-# plt.xlabel("epochs")
-# plt.ylabel("error rate")
-# plt.show()
+plt.figure()
+plt.plot(error)
+plt.title("error rate")
+plt.xlabel("epochs")
+plt.ylabel("error rate")
+plt.show()
 
 #%% evaluate
 model.evaluate(X_test,y_test)
