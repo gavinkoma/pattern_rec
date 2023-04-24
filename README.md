@@ -1,6 +1,2 @@
-## 02/11/2023
--added all images for homework submission 4
--decided to include logs in readme file going forward
+just need to test and see if my github updating is working, not sure why i cant see materials as they get uploaded yet
 
-# patternrecognition
-Coursework for Pattern Recognition Spring 2023
