@@ -1,0 +1,8 @@
+# <!-- XML constants -->
+
+# define a set of xml event class and type labels
+#
+xml_events = {"null_type": "null", "bckg_type": "bckg", "seiz_type": "seiz", "artf_type": "artf"}
+
+#
+# end of file
