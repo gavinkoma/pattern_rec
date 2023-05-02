@@ -131,3 +131,44 @@ if len(train_dict) == 1000 & len(dev_dict) == 1000:
     print("wow it actually worked")
 else:
     print('try again :(')
+    
+    
+#okay but like now what do we do
+#im not really sure how to progress now bc we need to implement an encoder/decoder
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
