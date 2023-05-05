@@ -5,7 +5,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import multilabel_confusion_matrix, classification_report, accuracy_score
 from sklearn import metrics
-import matplotlib.pyplot as plt
+import csv
 
 def add_meta_data(filename, df):
      with open(filename, 'r') as reader:
@@ -31,7 +31,6 @@ def add_meta_data(filename, df):
      df['chunk_num'] = df['t'].apply(lambda x: check_value(x, 'chunk'))
      df['chunk_start'] = df['t'].apply(lambda x: check_value(x, 'start'))
      df['chunk_end'] = df['t'].apply(lambda x: check_value(x, 'end'))
-
      return df
 
 def add_feature_engineering(df):
@@ -60,7 +59,6 @@ def add_feature_engineering(df):
           return df
 
      intervals = [10,20,50,100,300,600,1200]
-
      df = add_neighbors('signal', 10, df)
      df = add_neighbors('signal', -10, df)
      df = add_neighbor_avg('signal', intervals, df)
@@ -80,34 +78,19 @@ def load_data():
 
     file_train = glob.glob(train_path + "/*/*")
     for _file in file_train:
-        print(_file)
+        #print(_file)
         if '.csv' in _file:
             training_sets.append(_file)
 
 
     file_dev = glob.glob(dev_path + "/*/*")
     for _file in file_dev:
-        print(_file)
+        #print(_file)
         if '.csv' in _file:
             dev_sets.append(_file)
     
-    # for root, dirs, files in os.walk(train_path):
-    #     print(root)
-    #     for _file in files:
-    #         #print(str(root)+str(dirs).replace("[]","/")+str(_file))
-    #         if '.csv' in _file:
-    #             training_sets.append(str(root)+str(dirs).replace("[]","/")+str(_file))
-                                                          
-    # for root, dirs, files in os.walk(dev_path):
-    #     print(root)
-    #     for _file in files:
-    #         if '.csv' in _file:
-    #         #print(str(root)+str(_file))
-    #             dev_sets.append(str(root)+str(dirs).replace("[]","/")+str(_file))
-
     return training_sets, dev_sets
         
-
 
 def process_data(filename, training=True):
      main_df = build_main_df(filename)
@@ -122,20 +105,20 @@ def prepare_load():
     i=0
     for elem in training_files:
         df_arr_train.append(process_data(elem))
-        print('training ', i, 'file:', i, 'of', len(training_files))
+        print('training file:', i, 'of', len(training_files))
         i += 1
 
     df_arr_test = []
     i = 0
     for elem in testing_files:
         df_arr_test.append(process_data(elem))
-        print('testing ', i, 'file:', i, 'of', len(testing_files))
+        print('testing file:', i, 'of', len(testing_files))
         i += 1
 
     #df_arr_train = [process_data(x) for x in training_files]
     #df_arr_test = [process_data(x) for x in testing_files]
 
-    return df_arr_train, df_arr_test
+    return df_arr_train, df_arr_test, testing_files
 
 def train(df_arr,model,partial_fit):
     if partial_fit:
@@ -157,13 +140,15 @@ def train(df_arr,model,partial_fit):
 
 def predictions(df_arr,model):
     data = pd.concat(df_arr)
+    
+    essential = data.iloc[:,[3,4,5]]
+
     x_eval = data.drop(['class'], axis=1)
     y_eval = data['class']
     y_pred = model.predict(x_eval)
-    #print()
-    #print(pd.DataFrame(y_pred))
+
     confusion_matrix = multilabel_confusion_matrix(y_eval,y_pred)
-    print("multi cm \n", confusion_matrix)
+    #print("multi cm \n", confusion_matrix)
     #precision is true positives / sum(true positive + false positive)
     #what percent of guess positives are correct
 
@@ -171,12 +156,45 @@ def predictions(df_arr,model):
     #percent of guess positives that were not missed
 
     #f1 is harmonic mean of the above two values
-    print("class report \n8 ", classification_report(y_eval,y_pred))
-    print("accuracy: ", accuracy_score(y_eval,y_pred))
-    print("error: ", 1-accuracy_score(y_eval,y_pred))
+    #print("class report \n8 ", classification_report(y_eval,y_pred))
+    #print(f"accuracy: ", accuracy_score(y_eval,y_pred))
 
-    return
+    error_scores = []
+    error_scores.append(1-accuracy_score(y_eval,y_pred))
 
+    print("error of file: ", 1-accuracy_score(y_eval,y_pred))
+
+    y_pred = pd.DataFrame(y_pred)
+    y_pred.columns = ['label']
+    y_pred = pd.concat([essential,y_pred],axis = 1).reindex(y_pred.index)
+    y_pred["channel"] = "TERM"
+    y_pred["confidence"] = 1
+    y_pred = y_pred.rename(columns={"chunk_num":"chunk_num", 
+                            "chunk_start":"start_time", 
+                            "chunk_end":"stop_time",
+                            "label":"label",
+                            "confidence":"confidence"})
+    y_pred = y_pred.iloc[:,[4,1,2,3,5]]
+    #print(y_pred.head())
+    return y_pred
+
+def write_scores(scored_df,count):
+    names = []
+    name_path = '/Users/gavinkoma/Desktop/pattern_rec/final/data_s14/dev'
+    file_path = glob.glob(name_path+"/*/*")
+    for _file in file_path:
+        #print(_file)
+        if '.csv' in _file:
+            names.append(_file)
+    files_ = []
+    for file in names:
+        file_name = os.path.basename(file)
+        #print(file_name)
+        files_.append(file_name)
+    
+    data_frame_score = pd.DataFrame(scored_df).to_csv(f'/Users/gavinkoma/Desktop/pattern_rec/final/scored_data/scored_{files_[count]}',index = False)
+    
+    return names
 
 
 def main():
@@ -186,7 +204,8 @@ def main():
                           max_iter=2000)
     model2 = RandomForestClassifier(max_depth=3,
                                    random_state=0)
-    df_arr_train, df_arr_test = prepare_load()
+
+    df_arr_train, df_arr_test, training_files   = prepare_load()
     print('Data loaded!')
 
     #Train Models
@@ -195,16 +214,22 @@ def main():
     model1 = train(df_arr, model1, True)
     #print('MLP Trained, Starting Random Forest Training')
     #model2 = train(df_arr, model2, False)
-    print('Both models trained, scoring starting...')
+    print('Model trained, scoring starting...')
 
     #Test Models
     df_arr = df_arr_test
 
-    #Predictions
-    predictions(df_arr, model1)
-    #predictions(df_arr, model2)
+    count = 0
+
+    for file in df_arr:
+        scored_df = predictions([file],model1)
+        names = write_scores(scored_df,count)
+        count += 1
 
     return
+
+
+
 
 main()
 
