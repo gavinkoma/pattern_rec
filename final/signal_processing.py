@@ -1,0 +1,328 @@
+import os
+import glob
+import pandas as pd
+from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import multilabel_confusion_matrix,\
+                            classification_report, \
+                            log_loss, \
+                            accuracy_score
+from sklearn import metrics
+import csv
+
+def add_meta_data(filename, df):
+     with open(filename, 'r') as reader:
+          file = reader.readlines()
+          chunks = [x for x in file if '#' in x]
+          chunks = chunks[3:len(chunks) - 1]
+          chunks = [
+               {
+                    'chunk': int(x.split('# ')[1].split(':')[0]),
+                    'class': int(x.split('class: ')[1].split(',')[0]),
+                    'start': int(x.split('start: ')[1].split(',')[0]),
+                    'end': int(x.split('stop = ')[1].split('\n')[0])
+               } for x in chunks
+          ]
+         # print(chunks[len(chunks) -1])
+
+     def check_value(val, feature):
+          for elem in chunks:
+               if val >= elem['start'] and val <= elem['end']:
+                    return elem[feature]
+
+     df['class'] = df['t'].apply(lambda x: check_value(x, 'class'))
+     df['chunk_num'] = df['t'].apply(lambda x: check_value(x, 'chunk'))
+     df['chunk_start'] = df['t'].apply(lambda x: check_value(x, 'start'))
+     df['chunk_end'] = df['t'].apply(lambda x: check_value(x, 'end'))
+     return df
+
+def add_feature_engineering(df):
+     def add_neighbors(col_name, shift, df):
+          r = range(0, shift) if shift > 0 else range(shift, 0)
+          for i in r:
+               df[f'neighbor_{i}'] = df[col_name].shift(i * -1).fillna(0)
+          return df
+
+     def add_neighbor_avg(col_name, intervals, df):
+          for i in intervals:
+               df[f'{i}_neighbor_avg'] = df[col_name].rolling(
+                    i, 
+                    min_periods=1, 
+                    center=True
+               ).mean()
+          return df
+
+     def add_neighbor_std(col_name, intervals, df):
+          for i in intervals:
+               df[f'{i}_neighbor_avg'] = df[col_name].rolling(
+                    i, 
+                    min_periods=1, 
+                    center=True
+               ).std()
+          return df
+
+     intervals = [10,20,50,100,300,600,1200]
+     df = add_neighbors('signal', 10, df)
+     df = add_neighbors('signal', -10, df)
+     df = add_neighbor_avg('signal', intervals, df)
+     df = add_neighbor_std('signal', intervals, df)
+     #print(df.head())
+     return df
+
+def build_main_df(filename):
+     return pd.read_csv(filename, comment='#', header=None, names=['t', 'signal'])
+
+def load_data():
+    print('Loop over dirs and files:')
+    train_path = '/Users/gavinkoma/Desktop/pattern_rec/final/data_s14/train'
+    dev_path = '/Users/gavinkoma/Desktop/pattern_rec/final/data_s14/dev'
+    training_sets = []
+    dev_sets = []
+
+    file_train = glob.glob(train_path + "/*/*")
+    for _file in file_train:
+        #print(_file)
+        if '.csv' in _file:
+            training_sets.append(_file)
+
+    file_dev = glob.glob(dev_path + "/*/*")
+    for _file in file_dev:
+        #print(_file)
+        if '.csv' in _file:
+            dev_sets.append(_file)
+    
+    return training_sets, dev_sets
+        
+
+def process_data(filename, training=True):
+     main_df = build_main_df(filename)
+     if training:
+          main_df = add_meta_data(filename, main_df)
+     main_df = add_feature_engineering(main_df)
+     return main_df
+ 
+def prepare_load():
+    training_files, testing_files = load_data()
+    df_arr_train = []
+    i=0
+    for elem in training_files:
+        df_arr_train.append(process_data(elem))
+        print('training file:', i, 'of', len(training_files))
+        i += 1
+
+    df_arr_test = []
+    i = 0
+    for elem in testing_files:
+        df_arr_test.append(process_data(elem))
+        print('testing file:', i, 'of', len(testing_files))
+        i += 1
+
+    #df_arr_train = [process_data(x) for x in training_files]
+    #df_arr_test = [process_data(x) for x in testing_files]
+
+    return df_arr_train, df_arr_test, testing_files
+
+def train(df_arr,model,partial_fit):
+    if partial_fit:
+        i=0
+        for data in df_arr:
+            x_train = data.drop(['class'], axis=1)
+            y_train = data['class']
+            #print(type(model).__name__)
+            model.partial_fit(x_train,y_train,classes=[0,1,2,3,4])
+        return model
+
+    else:
+        data = pd.concat(df_arr)
+        x_train = data.drop(['class'], axis=1)
+        y_train = data['class']
+        #print(data.size)
+        model.fit(x_train,y_train)
+        return model
+
+def predictions(df_arr,model):
+    data = pd.concat(df_arr)
+
+    #essential = data.iloc[:,[3,4,5]]
+    #print(essential.head())
+
+    #print(data.columns)
+    essential = data[['t', 'signal', 'chunk_num','chunk_start','chunk_end',
+       'neighbor_0', 'neighbor_1', 'neighbor_2', 'neighbor_3', 'neighbor_4',
+       'neighbor_5', 'neighbor_6', 'neighbor_7', 'neighbor_8', 'neighbor_9',
+       'neighbor_-10', 'neighbor_-9', 'neighbor_-8', 'neighbor_-7',
+       'neighbor_-6', 'neighbor_-5', 'neighbor_-4', 'neighbor_-3',
+       'neighbor_-2', 'neighbor_-1', '10_neighbor_avg', '20_neighbor_avg',
+       '50_neighbor_avg', '100_neighbor_avg', '300_neighbor_avg',
+       '600_neighbor_avg', '1200_neighbor_avg']]
+
+    essential['chunk_num'] = len(data)
+    essential['chunk_start'] = 1    
+    essential['chunk_end'] = len(data)
+    print
+
+    #print(data.head())
+    
+    #essential = data.iloc[:,[3,4,5]]
+    x_eval = essential
+    y_pred = model.predict(x_eval)
+
+    y_pred = pd.DataFrame(y_pred)
+    y_pred.columns = ['label']
+    y_pred["confidence"] = 1
+    y_pred = pd.concat([essential,y_pred],axis = 1).reindex(y_pred.index)
+    y_pred = y_pred.rename(columns={"chunk_num":"chunk_num", 
+                    "chunk_start":"start_time", 
+                    "chunk_end":"stop_time",
+                    "label":"label",
+                    "confidence":"confidence"})
+    print(y_pred.columns)
+    y_pred["channel"] = "TERM"
+    y_pred = y_pred[['channel','start_time', 'stop_time', 'label','confidence']]
+
+    #y_pred = y_pred.iloc[:,[4,1,2,3,5]]
+
+    print(y_pred)
+
+    #print(x_eval)
+    #x_eval.drop(columns=['chunk_num'])
+    #y_eval = data['class']
+    #print(x_eval.head())
+    #y_pred = model.predict([,[:,1]])
+    #print(y_pred)
+
+    #confidence = []
+    #all_classes = [0,1,2,3,4]
+    #prob = model.predict_proba(x_eval)
+    #confidence.append(log_loss(y_pred, prob, labels=all_classes))
+    #print("entropy: ", confidence)
+    #confusion_matrix = multilabel_confusion_matrix(y_eval,y_pred)
+    #print("entropy: ",confidence)
+
+
+    #print("error of file: ", 1-accuracy_score(y_eval,y_pred))
+    #y_pred = pd.DataFrame(y_pred)
+    #y_pred.columns = ['label']
+    #y_pred = pd.concat([essential,y_pred],axis = 1).reindex(y_pred.index)
+    #y_pred["channel"] = "TERM"
+    #y_pred["confidence"] = float(1-float(confidence[0]))
+    # y_pred = y_pred.rename(columns={"chunk_num":"chunk_num", 
+    #                         "chunk_start":"start_time", 
+    #                         "chunk_end":"stop_time",
+    #                         "label":"label",
+    #                         "confidence":"confidence"})
+    #y_pred = y_pred.iloc[:,[4,1,2,3,5]]
+    #print(y_pred.head())
+
+    return y_pred
+
+def write_scores(scored_df,count):
+    #print(scored_df)
+    names = []
+    name_path = '/Users/gavinkoma/Desktop/pattern_rec/final/data_s14/dev'
+    file_path = glob.glob(name_path+"/*/*")
+    for _file in file_path:
+        #print(_file)
+        if '.csv' in _file:
+            names.append(_file)
+    files_ = []
+    for file in names:
+        file_name = os.path.basename(file)
+        #print(file_name)
+        files_.append(file_name)
+    
+    data_frame_score = pd.DataFrame(scored_df).to_csv(f'/Users/gavinkoma/Desktop/pattern_rec/final/scored_data/{files_[count]}',index = False)
+    return names
+
+
+def hypothesis_files():
+    names = []
+    name_path = '/Users/gavinkoma/Desktop/pattern_rec/final/scored_data'
+    file_path = glob.glob(name_path+"/*")
+    for _file in file_path:
+        #print(_file)
+        if '.csv' in _file:
+            names.append(_file)
+    files_ = []
+    for file in names:
+        file_name = os.path.basename(file)
+        #print(file_name)
+        files_.append(file_name)
+    #print(files_)
+
+    for file in files_:
+        data = pd.read_csv(f"/Users/gavinkoma/Desktop/pattern_rec/final/scored_data/{file}")
+        gd=data.groupby(['start_time']).apply(lambda gdf: gdf[0:1].reset_index().join( gdf[['label']].mode().add_suffix('_mode') ))
+
+        # reset index added this column we dont want
+        gd2=gd.drop(columns='index')
+        gd2=gd2.drop(columns='label')
+
+        # we needed to drop the new multiindex
+        gd2=gd2.reset_index(drop=True)
+        #print(gd2.head())
+        #cols = list(gd2.columns.values)
+        #print(cols)
+
+        gd2 = gd2.iloc[:,[0, 1, 2, 3, 4]]
+        gd2 = gd2.rename(columns={'channel': 'channel',
+                                    'start_time': 'start_time',
+                                    'stop_time' : 'stop_time',
+                                    'label_mode' : 'label',
+                                    'confidence' : 'confidence'})
+        #print(gd2.head())
+
+        hypothesis = pd.DataFrame(gd2).to_csv(f"/Users/gavinkoma/Desktop/pattern_rec/final/hypothesis_files/{file}",index = False)
+
+    return
+
+
+def main():
+    model1 = MLPClassifier(hidden_layer_sizes=(30,15,10,5),
+                          activation="tanh",
+                          random_state=1,
+                          max_iter=2000)
+    model2 = RandomForestClassifier(max_depth=3,
+                                   random_state=0)
+
+    df_arr_train, df_arr_test, training_files   = prepare_load()
+    print('Data loaded!')
+
+    #Train Models
+    df_arr = df_arr_train
+    print('Start MLP Training...')
+    model1 = train(df_arr, model1, True)
+    #print('MLP Trained, Starting Random Forest Training')
+    #model2 = train(df_arr, model2, False)
+    print('Model trained, scoring starting...')
+
+    #Test Models
+    df_arr = df_arr_test
+
+    count = 0
+
+    for file in df_arr:
+        scored_df = predictions([file],model1)
+        names = write_scores(scored_df,count)
+        count += 1
+    print("Writing hypothesis files...")
+    hypothesis_files()
+    print("Done!")
+
+    return
+
+main()
+
+# if __name__ == '__main__':
+#      import sys
+#      try:
+#           process_data(sys.argv[1])
+#      except Exception as e:
+#           print('failure encountered', e)
+
+
+
+
+
+
+
