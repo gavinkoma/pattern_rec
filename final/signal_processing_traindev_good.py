@@ -66,7 +66,7 @@ def add_feature_engineering(df):
      df = add_neighbors('signal', -10, df)
      df = add_neighbor_avg('signal', intervals, df)
      df = add_neighbor_std('signal', intervals, df)
-     print(df.head())
+    
      return df
 
 def build_main_df(filename):
@@ -118,8 +118,8 @@ def prepare_load():
         print('testing file:', i, 'of', len(testing_files))
         i += 1
 
-    #df_arr_train = [process_data(x) for x in training_files]
-    #df_arr_test = [process_data(x) for x in testing_files]
+    df_arr_train = [process_data(x) for x in training_files]
+    df_arr_test = [process_data(x) for x in testing_files]
 
     return df_arr_train, df_arr_test, testing_files
 
@@ -173,11 +173,11 @@ def predictions(df_arr,model):
                             "confidence":"confidence"})
     
     y_pred = y_pred.iloc[:,[4,1,2,3,5]]
-    print(y_pred.head())
+    #print(y_pred.head())
     return y_pred
 
 def write_scores(scored_df,count):
-    print(scored_df)
+    #print(scored_df)
     names = []
     name_path = '/Users/gavinkoma/Desktop/pattern_rec/final/data_s14/dev'
     file_path = glob.glob(name_path+"/*/*")
@@ -192,6 +192,7 @@ def write_scores(scored_df,count):
         files_.append(file_name)
     
     data_frame_score = pd.DataFrame(scored_df).to_csv(f'/Users/gavinkoma/Desktop/pattern_rec/final/scored_data/{files_[count]}',index = False)
+    
     return names
 
 
@@ -208,11 +209,12 @@ def hypothesis_files():
         file_name = os.path.basename(file)
         #print(file_name)
         files_.append(file_name)
-    print(files_)
+    #print(files_)
 
     for file in files_:
         data = pd.read_csv(f"/Users/gavinkoma/Desktop/pattern_rec/final/scored_data/{file}")
-        gd=data.groupby(['start_time']).apply(lambda gdf: gdf[0:1].reset_index().join( gdf[['label']].mode().add_suffix('_mode') ))
+        gd=data.groupby(['start_time']).apply(lambda gdf: \
+            gdf[0:1].reset_index().join( gdf[['label']].mode().add_suffix('_mode') ))
 
         # reset index added this column we dont want
         gd2=gd.drop(columns='index')
@@ -230,9 +232,11 @@ def hypothesis_files():
                                     'stop_time' : 'stop_time',
                                     'label_mode' : 'label',
                                     'confidence' : 'confidence'})
+
         print(gd2.head())
 
         hypothesis = pd.DataFrame(gd2).to_csv(f"/Users/gavinkoma/Desktop/pattern_rec/final/hypothesis_files/{file}",index = False)
+        
 
     return
 
@@ -265,7 +269,7 @@ def main():
         scored_df = predictions([file],model1)
         names = write_scores(scored_df,count)
         count += 1
-
+    print("Creating hypothesis files!!")
     hypothesis_files()
 
     return
